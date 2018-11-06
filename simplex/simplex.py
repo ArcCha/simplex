@@ -1,4 +1,14 @@
 import numpy as np
+import numpy.ma as ma
+
+
+class UnsolvableProblem(RuntimeError):
+    pass
+
+
+class UnboundedProblem(RuntimeError):
+    pass
+
 
 class Simplex(object):
     """Solver for linear problems given in a standard form."""
@@ -50,27 +60,16 @@ class Simplex(object):
         Returns:
             (i, j): i - row, j - column
         """
-        col = np.argmax(self.c) # column - most positive value in objective row
-        coef_props = self.b / self.tableau[:, col]
+        # col - most positive value in objective row
+        col = np.argmax(self.c) 
+        masked_column = ma.MaskedArray(self.tableau[:, col], self.tableau[:, col] <= 0)
+        if masked_column.count() == 0:
+            raise UnboundedProblem()
+        ratios = self.b / masked_column
+        # we naively choose the first minimum ratio
+        min_idx = ma.argmin(ratios)
+        return (min_idx, col)
 
-        # Strasznie glupia implementacja
-        # Jesli masz jakis lepszy pomysl jak to zakodzic, be my guest
-        min_idx = None
-        min_prop = None
-        for idx, val in enumerate(self.tableau[:, col]):
-            if val <= 0:
-                continue
-            prop = self.b[idx] / self.tableau[idx, col]
-            if min_prop is None or prop < min_prop:
-                min_idx = idx
-                min_prop = prop
-
-        if min_idx is None:
-            print("This problem doesn't have solutions")
-            return None # TODO: handle this
-
-        row = min_idx
-        return (row, col)
 
     def _optimize_around(self, pivot):
         row, col = pivot

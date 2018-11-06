@@ -5,15 +5,34 @@ sys.path.insert(0, os.path.abspath(os.path.join(
 
 import numpy as np
 
-from simplex import Simplex
+from simplex import Simplex, UnboundedProblem
 
 
 if __name__ == '__main__':
-    c = np.array([2, -3, -4]).astype("float")
-    A = np.array([[3, 2, 1], [2, 5, 3]]).astype("float")
-    b = np.array([10, 15]).astype("float")
+    print('Simple, existing solution')
+    c = np.array([2, 3, 4])
+    A = np.array([[3, 2, 1], [2, 5, 3]])
+    b = np.array([10, 15])
     s = Simplex(c, A, b)
-    print("Before solving", s.A, s.b, s.c)
-    print(s.solve())
-    print("After solving", s.tableau, s.b, s.c)
+    res = s.solve()
+    if res == -20:
+        print('pass')
+    else:
+        print('fail ' + str(s.solve()))
+    
+    print('Unbounded problem')
+    c = np.array([5, 4]).astype("float")
+    A = np.array([[1, 0], [1, -1]]).astype("float")
+    b = np.array([7, 8]).astype("float")
+    s = Simplex(c, A, b)
+    # print("Before solving", s.A, s.b, s.c)
+    thrown = False
+    try:
+        res = s.solve()
+    except UnboundedProblem:
+        thrown = True
+    if thrown:
+        print('pass')
+    else:
+        print('fail')
 

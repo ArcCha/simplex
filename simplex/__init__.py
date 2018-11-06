@@ -1,1 +1,1 @@
-from simplex.simplex import Simplex
+from simplex.simplex import *
