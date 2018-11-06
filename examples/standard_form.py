@@ -9,9 +9,11 @@ from simplex import Simplex
 
 
 if __name__ == '__main__':
-    c = np.array([-2, -3, -4])
-    A = np.array([[3, 2, 1], [2, 5, 3]])
-    b = np.array([10, 15])
+    c = np.array([2, -3, -4]).astype("float")
+    A = np.array([[3, 2, 1], [2, 5, 3]]).astype("float")
+    b = np.array([10, 15]).astype("float")
     s = Simplex(c, A, b)
+    print("Before solving", s.A, s.b, s.c)
     print(s.solve())
+    print("After solving", s.tableau, s.b, s.c)
 

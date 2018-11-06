@@ -1,3 +1,5 @@
+import numpy as np
+
 class Simplex(object):
     """Solver for linear problems given in a standard form."""
 
@@ -21,6 +23,7 @@ class Simplex(object):
         self.c = c
         self.A = A
         self.b = b
+        self.optim_rhs = 0
         self.tableau = None
 
 
@@ -31,10 +34,14 @@ class Simplex(object):
             self._optimize_around(pivot)
 
     def _compute_canonical_tableau(self):
-        pass
+        S = np.eye(len(self.b))
+        self.tableau = np.hstack((self.A, S))
+
+        c_zeros = np.zeros(len(self.b))
+        self.c = np.hstack((self.c, c_zeros))
 
     def _is_solution_optimal(self):
-        return True
+        return np.all(self.c <= 0)
 
     def _select_pivot(self):
         """
@@ -43,10 +50,45 @@ class Simplex(object):
         Returns:
             (i, j): i - row, j - column
         """
-        pass
+        col = np.argmax(self.c) # column - most positive value in objective row
+        coef_props = self.b / self.tableau[:, col]
 
+        # Strasznie glupia implementacja
+        # Jesli masz jakis lepszy pomysl jak to zakodzic, be my guest
+        min_idx = None
+        min_prop = None
+        for idx, val in enumerate(self.tableau[:, col]):
+            if val <= 0:
+                continue
+            prop = self.b[idx] / self.tableau[idx, col]
+            if min_prop is None or prop < min_prop:
+                min_idx = idx
+                min_prop = prop
+
+        if min_idx is None:
+            print("This problem doesn't have solutions")
+            return None # TODO: handle this
+
+        row = min_idx
+        return (row, col)
 
     def _optimize_around(self, pivot):
-        pass
+        row, col = pivot
+        self.tableau[row, :] /= self.tableau[row, col]
+        self.b[row] /= self.tableau[row, col]
 
+        pivot_val = self.tableau[row, col]
 
+        # Pivot c-row
+        val = self.c[col]
+        multiplier = val / pivot_val
+        self.c -= self.tableau[row] * multiplier
+        self.optim_rhs -= self.tableau[row] * multiplier
+
+        for idx in range(self.tableau.shape[0]):
+            if idx == row:
+                continue
+            val = self.tableau[idx, col]
+            multiplier = val / pivot_val
+            self.tableau[idx] -= self.tableau[row] * multiplier
+            self.b[idx] -= self.b[row] * multiplier
